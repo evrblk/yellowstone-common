@@ -7,6 +7,6 @@ This repository contains some reusable utils for Everblack services.
 
 * `cache` - simple caching with TTL
 * `encoding/base62` - Base62 implementation
-* `metrics` - handy Prometheus metrics server wrapper
+* `metrics` - handy Prometheus metrics server wrapper and some helpers
 * `workers` - interval worker implementation
-* `utils` - missing functions from `samber/lo`, 
+* `utils` - missing functions from `samber/lo`,
