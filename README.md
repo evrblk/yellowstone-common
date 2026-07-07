@@ -5,8 +5,9 @@
 
 This repository contains some reusable utils for Everblack services.
 
-* `cache` - simple caching with TTL
+* `cache` - cache with TTL, negative caching, and safe concurrent loading
 * `encoding/base62` - Base62 implementation
+* `honey` - tables for BadgerDB
 * `metrics` - handy Prometheus metrics server wrapper and some helpers
 * `workers` - interval worker implementation
 * `utils` - missing functions from `samber/lo`,

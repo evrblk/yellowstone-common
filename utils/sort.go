@@ -1,12 +1,11 @@
 package utils
 
 import (
+	"cmp"
 	"sort"
-
-	"golang.org/x/exp/constraints"
 )
 
-func SortBy[T any, R constraints.Ordered](collection []T, sortBy func(item T) R) []T {
+func SortBy[T any, R cmp.Ordered](collection []T, sortBy func(item T) R) []T {
 	result := make([]T, len(collection))
 	copy(result, collection)
 

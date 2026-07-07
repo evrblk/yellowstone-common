@@ -2,6 +2,7 @@ package honey
 
 import (
 	"fmt"
+	"maps"
 )
 
 // TablePrefix is a type-safe wrapper for table prefix byte slices.
@@ -54,9 +55,7 @@ func (r *BaseTableRegistry) RegisterPrefix(value []byte) TablePrefix {
 // GetAllPrefixes returns all registered table prefixes for inspection.
 func (r *BaseTableRegistry) GetAllPrefixes() map[string][]byte {
 	result := make(map[string][]byte, len(r.registry))
-	for k, v := range r.registry {
-		result[k] = v
-	}
+	maps.Copy(result, r.registry)
 	return result
 }
 

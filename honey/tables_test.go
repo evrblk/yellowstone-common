@@ -74,7 +74,7 @@ func TestBinaryTable_ListAll(t *testing.T) {
 
 	// Set multiple values with a common prefix
 	prefix := []byte{0x15}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		msg := &testMessage{Data: fmt.Sprintf("msg-%d", i)}
 		err := table.Set(txn, key, msg)
@@ -104,7 +104,7 @@ func TestBinaryTable_ListInRange(t *testing.T) {
 	defer txn.Discard()
 
 	// Set values with sequential keys
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := utils.ConcatBytes([]byte{0x15}, uint64(i*10))
 		msg := &testMessage{Data: fmt.Sprintf("msg-%d", i)}
 		err := table.Set(txn, key, msg)
@@ -144,7 +144,7 @@ func TestBinaryTable_ListPaginated(t *testing.T) {
 	// Set values
 	prefix := []byte{0x15}
 	numItems := 25
-	for i := 0; i < numItems; i++ {
+	for i := range numItems {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		msg := &testMessage{Data: fmt.Sprintf("msg-%d", i)}
 		err := table.Set(txn, key, msg)
@@ -272,7 +272,7 @@ func TestStringTable_ListAll(t *testing.T) {
 	defer txn.Discard()
 
 	prefix := []byte{0x35}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		value := fmt.Sprintf("value-%d", i)
 		err := table.Set(txn, key, value)
@@ -299,7 +299,7 @@ func TestStringTable_ListInRange(t *testing.T) {
 	txn := s.Update()
 	defer txn.Discard()
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := utils.ConcatBytes([]byte{0x35}, uint64(i*10))
 		value := fmt.Sprintf("value-%d", i)
 		err := table.Set(txn, key, value)
@@ -332,7 +332,7 @@ func TestStringTable_ListPaginated(t *testing.T) {
 
 	prefix := []byte{0x35}
 	numItems := 25
-	for i := 0; i < numItems; i++ {
+	for i := range numItems {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		value := fmt.Sprintf("value-%d", i)
 		err := table.Set(txn, key, value)
@@ -369,7 +369,7 @@ func TestStringTable_ByteSliceCorruption(t *testing.T) {
 	defer txn.Discard()
 
 	prefix := []byte{0x35}
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		value := fmt.Sprintf("value-%d", i)
 		err := table.Set(txn, key, value)
@@ -461,7 +461,7 @@ func TestUint64Table_ListAll(t *testing.T) {
 	defer txn.Discard()
 
 	prefix := []byte{0x55}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		value := uint64(i * 100)
 		err := table.Set(txn, key, value)
@@ -490,7 +490,7 @@ func TestUint64Table_ListPaginated(t *testing.T) {
 
 	prefix := []byte{0x55}
 	numItems := 25
-	for i := 0; i < numItems; i++ {
+	for i := range numItems {
 		key := utils.ConcatBytes(prefix, uint64(i))
 		value := uint64(i * 1000)
 		err := table.Set(txn, key, value)
@@ -583,7 +583,7 @@ func TestUint32Table_ListAll(t *testing.T) {
 	defer txn.Discard()
 
 	prefix := []byte{0x75}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := utils.ConcatBytes(prefix, uint32(i))
 		value := uint32(i * 50)
 		err := table.Set(txn, key, value)
@@ -612,7 +612,7 @@ func TestUint32Table_ListPaginated(t *testing.T) {
 
 	prefix := []byte{0x75}
 	numItems := 20
-	for i := 0; i < numItems; i++ {
+	for i := range numItems {
 		key := utils.ConcatBytes(prefix, uint32(i))
 		value := uint32(i * 2)
 		err := table.Set(txn, key, value)
@@ -667,7 +667,7 @@ func TestOneToManyUint64Index_Add_List_Delete(t *testing.T) {
 	pk := []byte{0x95, 0x01}
 
 	// Add items
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		err := index.Add(txn, pk, uint64(i))
 		require.NoError(t, err)
 	}
@@ -744,7 +744,7 @@ func TestOneToManyUint64Index_ListPaginated(t *testing.T) {
 
 	prefix := []byte{0x95}
 	numItems := 30
-	for i := 0; i < numItems; i++ {
+	for i := range numItems {
 		pk := utils.ConcatBytes(prefix, uint64(i))
 		err := index.Add(txn, pk, uint64(i*10))
 		require.NoError(t, err)
@@ -774,7 +774,7 @@ func TestOneToManyUint64Index_ByteSliceCorruption(t *testing.T) {
 
 	pk := []byte{0x95, 0x01}
 	numItems := 50
-	for i := 0; i < numItems; i++ {
+	for i := range numItems {
 		err := index.Add(txn, pk, uint64(i))
 		require.NoError(t, err)
 	}
@@ -891,8 +891,8 @@ func TestOneToManySortedIndex_ListInRange(t *testing.T) {
 	pk := []byte{0xb5, 0x01}
 
 	// Add items
-	for i := 0; i < 10; i++ {
-		item := []byte(fmt.Sprintf("item-%03d", i))
+	for i := range 10 {
+		item := fmt.Appendf(nil, "item-%03d", i)
 		err := index.Add(txn, pk, item)
 		require.NoError(t, err)
 	}
@@ -915,7 +915,7 @@ func TestOneToManySortedIndex_ListInRange(t *testing.T) {
 	require.Len(t, collected, 5)
 
 	for i, item := range collected {
-		expected := []byte(fmt.Sprintf("item-%03d", i+3))
+		expected := fmt.Appendf(nil, "item-%03d", i+3)
 		require.Equal(t, expected, item)
 	}
 }
@@ -959,8 +959,8 @@ func TestOneToManySortedIndex_ListPaginated(t *testing.T) {
 
 	pk := []byte{0xb5, 0x01}
 	numItems := 25
-	for i := 0; i < numItems; i++ {
-		item := []byte(fmt.Sprintf("item-%03d", i))
+	for i := range numItems {
+		item := fmt.Appendf(nil, "item-%03d", i)
 		err := index.Add(txn, pk, item)
 		require.NoError(t, err)
 	}
@@ -971,7 +971,7 @@ func TestOneToManySortedIndex_ListPaginated(t *testing.T) {
 
 	// Verify items are correctly extracted (prefix stripped)
 	for i, item := range result.Items {
-		expected := []byte(fmt.Sprintf("item-%03d", i))
+		expected := fmt.Appendf(nil, "item-%03d", i)
 		require.Equal(t, expected, item)
 	}
 }

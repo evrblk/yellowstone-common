@@ -556,8 +556,8 @@ func (i *OneToManyUint64Index) List(txn *store.Txn, pk []byte, fn func(item uint
 	})
 }
 
-func (t *OneToManyUint64Index) ListPaginated(txn *store.Txn, prefix []byte, paginationToken *PaginationToken, limit int) (*ListPaginatedUint64Result, error) {
-	rawResult, err := t.listPrefixedPaginated(txn, prefix, paginationToken, limit)
+func (i *OneToManyUint64Index) ListPaginated(txn *store.Txn, prefix []byte, paginationToken *PaginationToken, limit int) (*ListPaginatedUint64Result, error) {
+	rawResult, err := i.listPrefixedPaginated(txn, prefix, paginationToken, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -621,8 +621,8 @@ type ListPaginatedBytesResult struct {
 	PreviousPaginationToken *PaginationToken
 }
 
-func (t *OneToManySortedIndex) ListPaginated(txn *store.Txn, prefix []byte, paginationToken *PaginationToken, limit int) (*ListPaginatedBytesResult, error) {
-	rawResult, err := t.listPrefixedPaginated(txn, prefix, paginationToken, limit)
+func (i *OneToManySortedIndex) ListPaginated(txn *store.Txn, prefix []byte, paginationToken *PaginationToken, limit int) (*ListPaginatedBytesResult, error) {
+	rawResult, err := i.listPrefixedPaginated(txn, prefix, paginationToken, limit)
 	if err != nil {
 		return nil, err
 	}

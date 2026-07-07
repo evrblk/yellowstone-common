@@ -2,7 +2,8 @@ package base62
 
 import (
 	"bytes"
-	"math/rand"
+	cryptorand "crypto/rand"
+	mathrand "math/rand/v2"
 	"strings"
 	"testing"
 )
@@ -26,7 +27,7 @@ func TestEncodeDecode(t *testing.T) {
 }
 
 func TestEncodeDecodeZeros(t *testing.T) {
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		src := make([]byte, i)
 		dst := StdEncoding._encodeV1(src)
 		got, err := Decode(dst)
@@ -47,7 +48,7 @@ func TestEncodeDecodeZeros(t *testing.T) {
 }
 
 func TestEncodeDecode0xFF(t *testing.T) {
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		src := make([]byte, i)
 		for i := range src {
 			src[i] = 0xff
@@ -71,9 +72,9 @@ func TestEncodeDecode0xFF(t *testing.T) {
 }
 
 func TestEncodeDecodeRandomBytes(t *testing.T) {
-	for i := 0; i < 1000000; i++ {
-		src := make([]byte, 32+rand.Intn(32))
-		_, _ = rand.Read(src)
+	for range 1000000 {
+		src := make([]byte, 32+mathrand.IntN(32))
+		_, _ = cryptorand.Read(src)
 		dst := StdEncoding._encodeV1(src)
 		got, err := Decode(dst)
 		if err != nil {
@@ -94,9 +95,9 @@ func TestEncodeDecodeRandomBytes(t *testing.T) {
 
 func TestEncodeToBuf(t *testing.T) {
 	buf := make([]byte, 0, 1000)
-	for i := 0; i < 10000; i++ {
-		src := make([]byte, 32+rand.Intn(100))
-		_, _ = rand.Read(src)
+	for range 10000 {
+		src := make([]byte, 32+mathrand.IntN(100))
+		_, _ = cryptorand.Read(src)
 		want := Encode(src)
 
 		got1 := EncodeToBuf(make([]byte, 0, 2), src)
@@ -113,9 +114,9 @@ func TestEncodeToBuf(t *testing.T) {
 
 func TestDecodeToBuf(t *testing.T) {
 	buf := make([]byte, 0, 1000)
-	for i := 0; i < 10000; i++ {
-		src := make([]byte, 32+rand.Intn(100))
-		_, _ = rand.Read(src)
+	for range 10000 {
+		src := make([]byte, 32+mathrand.IntN(100))
+		_, _ = cryptorand.Read(src)
 		encoded := Encode(src)
 
 		got1, err := DecodeToBuf(make([]byte, 0, 2), encoded)

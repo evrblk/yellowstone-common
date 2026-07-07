@@ -2,9 +2,7 @@ package base62
 
 import (
 	"math/bits"
-	"reflect"
 	"strconv"
-	"unsafe"
 )
 
 const (
@@ -35,7 +33,7 @@ func NewEncoding(encoder string) *Encoding {
 
 	e := new(Encoding)
 	copy(e.encode[:], encoder)
-	for i := 0; i < len(e.decodeMap); i++ {
+	for i := range len(e.decodeMap) {
 		e.decodeMap[i] = 0xFF
 	}
 	for i := 0; i < len(encoder); i++ {
@@ -73,8 +71,7 @@ func (enc *Encoding) _encodeV2(src []byte) []byte {
 
 // EncodeToString returns a base62 string representation of src.
 func (enc *Encoding) EncodeToString(src []byte) string {
-	ret := enc.Encode(src)
-	return b2s(ret)
+	return string(enc.Encode(src))
 }
 
 // EncodeToBuf encodes src using the encoding enc, appending the encoded
@@ -110,10 +107,7 @@ func (enc *encoder) next() (byte, bool) {
 	} else {
 		i = pos / 8
 		j = byte(pos % 8)
-		blen = byte((i+1)*8 - pos)
-		if blen > 6 {
-			blen = 6
-		}
+		blen = min(byte((i+1)*8-pos), 6)
 	}
 	shift := 8 - j - blen
 	b := enc.src[i] >> shift & (1<<blen - 1)
@@ -198,8 +192,7 @@ func (enc *Encoding) Decode(src []byte) ([]byte, error) {
 
 // DecodeString returns the bytes represented by the base62 string src.
 func (enc *Encoding) DecodeString(src string) ([]byte, error) {
-	b := s2b(src)
-	return enc.Decode(b)
+	return enc.Decode([]byte(src))
 }
 
 // DecodeToBuf decodes src using the encoding enc, appending the decoded
@@ -263,17 +256,4 @@ func (dec decoder) decode(dst []byte, decTable []byte) (int, error) {
 		dst[idx] = byte(b)
 	}
 	return idx, nil
-}
-
-func b2s(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
-
-func s2b(s string) (b []byte) {
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	bh.Data = sh.Data
-	bh.Len = sh.Len
-	bh.Cap = sh.Len
-	return
 }

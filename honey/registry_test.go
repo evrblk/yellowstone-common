@@ -53,8 +53,7 @@ func TestBaseTableRegistry_RegisterPrefix_Valid(t *testing.T) {
 	allPrefixes := registry.GetAllPrefixes()
 	require.Len(t, allPrefixes, 1)
 
-	key := string(prefix)
-	registered, exists := allPrefixes[key]
+	registered, exists := allPrefixes[string(prefix)]
 	require.True(t, exists)
 	require.Equal(t, prefix, registered)
 }
@@ -79,8 +78,7 @@ func TestBaseTableRegistry_RegisterPrefix_Multiple(t *testing.T) {
 	require.Len(t, allPrefixes, len(prefixes))
 
 	for _, prefix := range prefixes {
-		key := string(prefix)
-		registered, exists := allPrefixes[key]
+		registered, exists := allPrefixes[string(prefix)]
 		require.True(t, exists, "Prefix %v not found in registry", prefix)
 		require.Equal(t, prefix, registered)
 	}
@@ -214,8 +212,7 @@ func TestPrefixedTableRegistry_RegisterPrefix_AddsPrefix(t *testing.T) {
 	allPrefixes := baseRegistry.GetAllPrefixes()
 	require.Len(t, allPrefixes, 1)
 
-	key := string(expected)
-	registered, exists := allPrefixes[key]
+	registered, exists := allPrefixes[string(expected)]
 	require.True(t, exists, "Full prefix not found in base registry")
 	require.Equal(t, expected, registered)
 }
@@ -307,8 +304,7 @@ func TestPrefixedTableRegistry_Nested(t *testing.T) {
 	allPrefixes := baseRegistry.GetAllPrefixes()
 	require.Len(t, allPrefixes, 1)
 
-	key := string(expected)
-	registered, exists := allPrefixes[key]
+	registered, exists := allPrefixes[string(expected)]
 	require.True(t, exists, "Nested prefix not found in base registry")
 	require.Equal(t, expected, registered)
 }
@@ -426,8 +422,7 @@ func TestIntegration_MixedRegistrations(t *testing.T) {
 	}
 
 	for _, expected := range expectedPrefixes {
-		key := string(expected)
-		registered, exists := allPrefixes[key]
+		registered, exists := allPrefixes[string(expected)]
 		require.True(t, exists, "Prefix %v not found in registry", expected)
 		require.Equal(t, expected, registered)
 	}
@@ -459,7 +454,7 @@ func TestIntegration_ByteSliceStoredByReference(t *testing.T) {
 	registry := NewBaseTableRegistry(4)
 
 	original := []byte{0x01, 0x02, 0x03, 0x04}
-	originalKey := string(original)
+	originalKey := string(original) //lint:ignore SA6001 take a snapshot of `original` before modifying it
 	tablePrefix := registry.RegisterPrefix(original)
 
 	// Verify the slice is stored by reference (not copied)
