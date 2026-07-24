@@ -27,6 +27,10 @@ type PaginationToken struct {
 type table struct {
 	// keyLowerBound and keyUpperBound are used to define the range of keys that are stored in the table.
 	// These bounds are inclusive and do not contain the tableId prefix.
+	// Both may be nil: no range restriction — the tableId prefix is the only
+	// isolation (every key access trivially passes the bounds check, and full
+	// iteration degenerates to a tableId prefix scan). Used by tables whose
+	// keys carry no shard key material (exclusive-store cores).
 	keyLowerBound []byte
 	keyUpperBound []byte
 
@@ -230,6 +234,20 @@ func (t *table) getFullKey(key []byte) []byte {
 
 func (t *table) GetTableKeyRange() KeyRange {
 	return *t.tableKeyRange
+}
+
+// TableId returns the table's id prefix; every key of the table lives under
+// it. Used by owners to clear a table wholesale (DropPrefix).
+func (t *table) TableId() []byte {
+	return t.tableId
+}
+
+// EachEntry iterates every row of the table in key order, invoking fn with the
+// table-relative key (the table id prefix stripped) and the raw stored value.
+// This is the raw building block for portable snapshots, which must not leak
+// the table id into the stream.
+func (t *table) EachEntry(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.listInRange(txn, nil, nil, false, fn)
 }
 
 // BinaryTable is table with a composite key: primary key PK and secondary key SK
