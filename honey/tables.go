@@ -24,38 +24,24 @@ type PaginationToken struct {
 }
 
 // table helps to work with a KV store without worrying about tableId prefixes.
+//
+// The tableId prefix is the table's entire key range: every key lives under it
+// and nothing else does. This is the exclusive-store layout — each owning core
+// nests a node-local replica prefix into its table ids, so a table id is unique
+// to one core and its whole range belongs to that core. There is no in-table
+// key-range restriction.
 type table struct {
-	// keyLowerBound and keyUpperBound are used to define the range of keys that are stored in the table.
-	// These bounds are inclusive and do not contain the tableId prefix.
-	// Both may be nil: no range restriction — the tableId prefix is the only
-	// isolation (every key access trivially passes the bounds check, and full
-	// iteration degenerates to a tableId prefix scan). Used by tables whose
-	// keys carry no shard key material (exclusive-store cores).
-	keyLowerBound []byte
-	keyUpperBound []byte
-
 	// tableId is a unique prefix that is used to isolate tables on a shared Badger store.
 	tableId []byte
-
-	// tableKeyRange is a range of keys that are stored in the table. It contains the tableId prefix.
-	tableKeyRange *KeyRange
 }
 
-func newTable(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) table {
+func newTable(tableId []byte) table {
 	if len(tableId) == 0 {
 		panic("tableId must not be empty")
 	}
 
-	tableKeyRange := &KeyRange{
-		Lower: utils.ConcatBytes(tableId, keyLowerBound),
-		Upper: utils.ConcatBytes(tableId, keyUpperBound),
-	}
-
 	return table{
-		keyLowerBound: keyLowerBound,
-		keyUpperBound: keyUpperBound,
-		tableId:       tableId,
-		tableKeyRange: tableKeyRange,
+		tableId: tableId,
 	}
 }
 
@@ -92,14 +78,14 @@ func (t *table) listInRange(txn *store.Txn, lowerBound []byte, upperBound []byte
 	if lowerBound != nil {
 		lower = t.getFullKey(lowerBound)
 	} else {
-		lower = t.tableKeyRange.Lower
+		lower = t.tableId
 	}
 
 	var upper []byte
 	if upperBound != nil {
 		upper = t.getFullKey(upperBound)
 	} else {
-		upper = t.tableKeyRange.Upper
+		upper = t.tableId
 	}
 
 	return txn.EachRange(lower, upper, reverse, func(key []byte, value []byte) (bool, error) {
@@ -120,10 +106,6 @@ func (t *table) listPrefixedPaginated(txn *store.Txn, prefix []byte, paginationT
 		Keys:   make([][]byte, 0),
 	}
 
-	if len(prefix) == 0 {
-		prefix = t.keyLowerBound
-	}
-
 	if paginationToken == nil {
 		err := t.eachPrefix(txn, prefix, func(key []byte, value []byte) (bool, error) {
 			if len(result.Values) == limit {
@@ -142,7 +124,7 @@ func (t *table) listPrefixedPaginated(txn *store.Txn, prefix []byte, paginationT
 			return nil, err
 		}
 	} else if !paginationToken.Reverse {
-		err := t.listInRange(txn, t.keyLowerBound, paginationToken.Key, true, func(key []byte, value []byte) (bool, error) {
+		err := t.listInRange(txn, nil, paginationToken.Key, true, func(key []byte, value []byte) (bool, error) {
 			if !bytes.HasPrefix(key, prefix) {
 				return false, nil
 			}
@@ -161,7 +143,7 @@ func (t *table) listPrefixedPaginated(txn *store.Txn, prefix []byte, paginationT
 			return nil, err
 		}
 
-		err = t.listInRange(txn, paginationToken.Key, t.keyUpperBound, false, func(key []byte, value []byte) (bool, error) {
+		err = t.listInRange(txn, paginationToken.Key, nil, false, func(key []byte, value []byte) (bool, error) {
 			if !bytes.HasPrefix(key, prefix) {
 				return false, nil
 			}
@@ -182,7 +164,7 @@ func (t *table) listPrefixedPaginated(txn *store.Txn, prefix []byte, paginationT
 			return nil, err
 		}
 	} else {
-		err := t.listInRange(txn, paginationToken.Key, t.keyUpperBound, false, func(key []byte, value []byte) (bool, error) {
+		err := t.listInRange(txn, paginationToken.Key, nil, false, func(key []byte, value []byte) (bool, error) {
 			if !bytes.HasPrefix(key, prefix) {
 				return false, nil
 			}
@@ -201,7 +183,7 @@ func (t *table) listPrefixedPaginated(txn *store.Txn, prefix []byte, paginationT
 			return nil, err
 		}
 
-		err = t.listInRange(txn, t.keyLowerBound, paginationToken.Key, true, func(key []byte, value []byte) (bool, error) {
+		err = t.listInRange(txn, nil, paginationToken.Key, true, func(key []byte, value []byte) (bool, error) {
 			if !bytes.HasPrefix(key, prefix) {
 				return false, nil
 			}
@@ -227,13 +209,7 @@ func (t *table) listPrefixedPaginated(txn *store.Txn, prefix []byte, paginationT
 }
 
 func (t *table) getFullKey(key []byte) []byte {
-	fullKey := utils.ConcatBytes(t.tableId, key)
-	panicIfOutOfRange(fullKey, t.tableKeyRange.Lower, t.tableKeyRange.Upper)
-	return fullKey
-}
-
-func (t *table) GetTableKeyRange() KeyRange {
-	return *t.tableKeyRange
+	return utils.ConcatBytes(t.tableId, key)
 }
 
 // TableId returns the table's id prefix; every key of the table lives under
@@ -257,9 +233,9 @@ type BinaryTable[T ptr[U], U any] struct {
 	table
 }
 
-func NewBinaryTable[T ptr[U], U any](tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *BinaryTable[T, U] {
+func NewBinaryTable[T ptr[U], U any](tableId []byte) *BinaryTable[T, U] {
 	return &BinaryTable[T, U]{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -354,9 +330,9 @@ type StringTable struct {
 	table
 }
 
-func NewStringTable(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *StringTable {
+func NewStringTable(tableId []byte) *StringTable {
 	return &StringTable{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -428,9 +404,9 @@ type Uint64Table struct {
 	table
 }
 
-func NewUint64Table(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *Uint64Table {
+func NewUint64Table(tableId []byte) *Uint64Table {
 	return &Uint64Table{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -496,9 +472,9 @@ type Uint32Table struct {
 	table
 }
 
-func NewUint32Table(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *Uint32Table {
+func NewUint32Table(tableId []byte) *Uint32Table {
 	return &Uint32Table{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -562,9 +538,9 @@ type OneToManyUint64Index struct {
 	table
 }
 
-func NewOneToManyUint64Index(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *OneToManyUint64Index {
+func NewOneToManyUint64Index(tableId []byte) *OneToManyUint64Index {
 	return &OneToManyUint64Index{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -612,9 +588,9 @@ type OneToManySortedIndex struct {
 	table
 }
 
-func NewOneToManySortedIndex(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *OneToManySortedIndex {
+func NewOneToManySortedIndex(tableId []byte) *OneToManySortedIndex {
 	return &OneToManySortedIndex{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -677,9 +653,9 @@ type SortedIndex struct {
 	table
 }
 
-func NewSortedIndex(tableId []byte, keyLowerBound []byte, keyUpperBound []byte) *SortedIndex {
+func NewSortedIndex(tableId []byte) *SortedIndex {
 	return &SortedIndex{
-		table: newTable(tableId, keyLowerBound, keyUpperBound),
+		table: newTable(tableId),
 	}
 }
 
@@ -699,22 +675,6 @@ func (i *SortedIndex) Delete(txn *store.Txn, item []byte) error {
 
 func (i *SortedIndex) NotEmpty(txn *store.Txn, pk []byte) (bool, error) {
 	return i.prefixExists(txn, pk)
-}
-
-func (i *SortedIndex) GetTableKeyRange() KeyRange {
-	return *i.tableKeyRange
-}
-
-// isWithinRange checks if a key is within a given range, both sides inclusive
-func isWithinRange(key []byte, lowerBound []byte, upperBound []byte) bool {
-	return bytes.Compare(key[:len(upperBound)], upperBound) <= 0 &&
-		bytes.Compare(key[:len(lowerBound)], lowerBound) >= 0
-}
-
-func panicIfOutOfRange(key []byte, lowerBound []byte, upperBound []byte) {
-	if !isWithinRange(key, lowerBound, upperBound) {
-		panic("key is out of range!")
-	}
 }
 
 // Converts bytes to uint64

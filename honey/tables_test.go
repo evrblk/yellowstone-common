@@ -39,7 +39,7 @@ func TestBinaryTable_Get_Set_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("BINARY1")
-	table := NewBinaryTable[*testMessage, testMessage](tableId, []byte{0x10}, []byte{0x20})
+	table := NewBinaryTable[*testMessage, testMessage](tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -67,7 +67,7 @@ func TestBinaryTable_ListAll(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("BINARY1")
-	table := NewBinaryTable[*testMessage, testMessage](tableId, []byte{0x10}, []byte{0x20})
+	table := NewBinaryTable[*testMessage, testMessage](tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -98,7 +98,7 @@ func TestBinaryTable_ListInRange(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("BINARY1")
-	table := NewBinaryTable[*testMessage, testMessage](tableId, []byte{0x10}, []byte{0x20})
+	table := NewBinaryTable[*testMessage, testMessage](tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -136,7 +136,7 @@ func TestBinaryTable_ListPaginated(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("BINARY1")
-	table := NewBinaryTable[*testMessage, testMessage](tableId, []byte{0x10}, []byte{0x20})
+	table := NewBinaryTable[*testMessage, testMessage](tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -182,7 +182,7 @@ func TestBinaryTable_PrefixTrimming(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("BINARY1")
-	table := NewBinaryTable[*testMessage, testMessage](tableId, []byte{0x10}, []byte{0x20})
+	table := NewBinaryTable[*testMessage, testMessage](tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -202,33 +202,6 @@ func TestBinaryTable_PrefixTrimming(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestBinaryTable_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("BINARY1")
-	table := NewBinaryTable[*testMessage, testMessage](tableId, []byte{0x10}, []byte{0x20})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	msg := &testMessage{Data: "test"}
-
-	// Test key below range - should panic
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x05}, msg)
-	})
-
-	// Test key above range - should panic
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x25}, msg)
-	})
-
-	// Test key within range - should not panic
-	err := table.Set(txn, []byte{0x15}, msg)
-	require.NoError(t, err)
-}
-
 // =============================================================================
 // StringTable Tests
 // =============================================================================
@@ -238,7 +211,7 @@ func TestStringTable_Get_Set_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("STRING1")
-	table := NewStringTable(tableId, []byte{0x30}, []byte{0x40})
+	table := NewStringTable(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -266,7 +239,7 @@ func TestStringTable_ListAll(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("STRING1")
-	table := NewStringTable(tableId, []byte{0x30}, []byte{0x40})
+	table := NewStringTable(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -294,7 +267,7 @@ func TestStringTable_ListInRange(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("STRING1")
-	table := NewStringTable(tableId, []byte{0x30}, []byte{0x40})
+	table := NewStringTable(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -325,7 +298,7 @@ func TestStringTable_ListPaginated(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("STRING1")
-	table := NewStringTable(tableId, []byte{0x30}, []byte{0x40})
+	table := NewStringTable(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -363,7 +336,7 @@ func TestStringTable_ByteSliceCorruption(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("STRING1")
-	table := NewStringTable(tableId, []byte{0x30}, []byte{0x40})
+	table := NewStringTable(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -394,31 +367,6 @@ func TestStringTable_ByteSliceCorruption(t *testing.T) {
 	}
 }
 
-func TestStringTable_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("STRING1")
-	table := NewStringTable(tableId, []byte{0x30}, []byte{0x40})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	// Key below range
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x20}, "value")
-	})
-
-	// Key above range
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x50}, "value")
-	})
-
-	// Key within range
-	err := table.Set(txn, []byte{0x35}, "value")
-	require.NoError(t, err)
-}
-
 // =============================================================================
 // Uint64Table Tests
 // =============================================================================
@@ -428,7 +376,7 @@ func TestUint64Table_Get_Set_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("UINT64")
-	table := NewUint64Table(tableId, []byte{0x50}, []byte{0x60})
+	table := NewUint64Table(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -455,7 +403,7 @@ func TestUint64Table_ListAll(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("UINT64")
-	table := NewUint64Table(tableId, []byte{0x50}, []byte{0x60})
+	table := NewUint64Table(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -483,7 +431,7 @@ func TestUint64Table_ListPaginated(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("UINT64")
-	table := NewUint64Table(tableId, []byte{0x50}, []byte{0x60})
+	table := NewUint64Table(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -520,27 +468,6 @@ func TestUint64Table_ListPaginated(t *testing.T) {
 	}
 }
 
-func TestUint64Table_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("UINT64")
-	table := NewUint64Table(tableId, []byte{0x50}, []byte{0x60})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	// Key below range
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x40}, 123)
-	})
-
-	// Key above range
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x70}, 123)
-	})
-}
-
 // =============================================================================
 // Uint32Table Tests
 // =============================================================================
@@ -550,7 +477,7 @@ func TestUint32Table_Get_Set_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("UINT32")
-	table := NewUint32Table(tableId, []byte{0x70}, []byte{0x80})
+	table := NewUint32Table(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -577,7 +504,7 @@ func TestUint32Table_ListAll(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("UINT32")
-	table := NewUint32Table(tableId, []byte{0x70}, []byte{0x80})
+	table := NewUint32Table(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -605,7 +532,7 @@ func TestUint32Table_ListPaginated(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("UINT32")
-	table := NewUint32Table(tableId, []byte{0x70}, []byte{0x80})
+	table := NewUint32Table(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -629,27 +556,6 @@ func TestUint32Table_ListPaginated(t *testing.T) {
 	}
 }
 
-func TestUint32Table_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("UINT32")
-	table := NewUint32Table(tableId, []byte{0x70}, []byte{0x80})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	// Key below range
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x60}, 123)
-	})
-
-	// Key above range
-	require.Panics(t, func() {
-		_ = table.Set(txn, []byte{0x90}, 123)
-	})
-}
-
 // =============================================================================
 // OneToManyUint64Index Tests
 // =============================================================================
@@ -659,7 +565,7 @@ func TestOneToManyUint64Index_Add_List_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDX64")
-	index := NewOneToManyUint64Index(tableId, []byte{0x90}, []byte{0xa0})
+	index := NewOneToManyUint64Index(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -704,7 +610,7 @@ func TestOneToManyUint64Index_NotEmpty(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDX64")
-	index := NewOneToManyUint64Index(tableId, []byte{0x90}, []byte{0xa0})
+	index := NewOneToManyUint64Index(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -737,7 +643,7 @@ func TestOneToManyUint64Index_ListPaginated(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDX64")
-	index := NewOneToManyUint64Index(tableId, []byte{0x90}, []byte{0xa0})
+	index := NewOneToManyUint64Index(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -767,7 +673,7 @@ func TestOneToManyUint64Index_ByteSliceCorruption(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDX64")
-	index := NewOneToManyUint64Index(tableId, []byte{0x90}, []byte{0xa0})
+	index := NewOneToManyUint64Index(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -793,27 +699,6 @@ func TestOneToManyUint64Index_ByteSliceCorruption(t *testing.T) {
 	}
 }
 
-func TestOneToManyUint64Index_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("IDX64")
-	index := NewOneToManyUint64Index(tableId, []byte{0x90}, []byte{0xa0})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	// Key below range
-	require.Panics(t, func() {
-		_ = index.Add(txn, []byte{0x80}, 123)
-	})
-
-	// Key above range
-	require.Panics(t, func() {
-		_ = index.Add(txn, []byte{0xb0}, 123)
-	})
-}
-
 // =============================================================================
 // OneToManySortedIndex Tests
 // =============================================================================
@@ -823,7 +708,7 @@ func TestOneToManySortedIndex_Add_ListAll_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDXSRT")
-	index := NewOneToManySortedIndex(tableId, []byte{0xb0}, []byte{0xc0})
+	index := NewOneToManySortedIndex(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -883,7 +768,7 @@ func TestOneToManySortedIndex_ListInRange(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDXSRT")
-	index := NewOneToManySortedIndex(tableId, []byte{0xb0}, []byte{0xc0})
+	index := NewOneToManySortedIndex(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -925,7 +810,7 @@ func TestOneToManySortedIndex_NotEmpty(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDXSRT")
-	index := NewOneToManySortedIndex(tableId, []byte{0xb0}, []byte{0xc0})
+	index := NewOneToManySortedIndex(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -952,7 +837,7 @@ func TestOneToManySortedIndex_ListPaginated(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("IDXSRT")
-	index := NewOneToManySortedIndex(tableId, []byte{0xb0}, []byte{0xc0})
+	index := NewOneToManySortedIndex(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -976,27 +861,6 @@ func TestOneToManySortedIndex_ListPaginated(t *testing.T) {
 	}
 }
 
-func TestOneToManySortedIndex_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("IDXSRT")
-	index := NewOneToManySortedIndex(tableId, []byte{0xb0}, []byte{0xc0})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	// Key below range
-	require.Panics(t, func() {
-		_ = index.Add(txn, []byte{0xa0}, []byte("item"))
-	})
-
-	// Key above range
-	require.Panics(t, func() {
-		_ = index.Add(txn, []byte{0xd0}, []byte("item"))
-	})
-}
-
 // =============================================================================
 // SortedIndex Tests
 // =============================================================================
@@ -1006,7 +870,7 @@ func TestSortedIndex_Add_ListInRange_Delete(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("SORTED")
-	index := NewSortedIndex(tableId, []byte{0xd0}, []byte{0xe0})
+	index := NewSortedIndex(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -1062,7 +926,7 @@ func TestSortedIndex_NotEmpty(t *testing.T) {
 	defer s.Close()
 
 	tableId := []byte("SORTED")
-	index := NewSortedIndex(tableId, []byte{0xd0}, []byte{0xe0})
+	index := NewSortedIndex(tableId)
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -1084,50 +948,6 @@ func TestSortedIndex_NotEmpty(t *testing.T) {
 	require.True(t, notEmpty)
 }
 
-func TestSortedIndex_GetTableKeyRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("SORTED")
-	lowerBound := []byte{0xd0}
-	upperBound := []byte{0xe0}
-	index := NewSortedIndex(tableId, lowerBound, upperBound)
-
-	keyRange := index.GetTableKeyRange()
-
-	// Key range should include tableId prefix
-	expectedLower := utils.ConcatBytes(tableId, lowerBound)
-	expectedUpper := utils.ConcatBytes(tableId, upperBound)
-
-	require.Equal(t, expectedLower, keyRange.Lower)
-	require.Equal(t, expectedUpper, keyRange.Upper)
-}
-
-func TestSortedIndex_OutOfRange(t *testing.T) {
-	s := setupTestStore(t)
-	defer s.Close()
-
-	tableId := []byte("SORTED")
-	index := NewSortedIndex(tableId, []byte{0xd0}, []byte{0xe0})
-
-	txn := s.Update()
-	defer txn.Discard()
-
-	// Key below range
-	require.Panics(t, func() {
-		_ = index.Add(txn, []byte{0xc0})
-	})
-
-	// Key above range
-	require.Panics(t, func() {
-		_ = index.Add(txn, []byte{0xf0})
-	})
-
-	// Key within range
-	err := index.Add(txn, []byte{0xd5})
-	require.NoError(t, err)
-}
-
 // =============================================================================
 // Cross-Table Tests
 // =============================================================================
@@ -1136,8 +956,8 @@ func TestMultipleTableIsolation(t *testing.T) {
 	s := setupTestStore(t)
 	defer s.Close()
 
-	table1 := NewStringTable([]byte("TBL1"), []byte{0x00}, []byte{0xff})
-	table2 := NewStringTable([]byte("TBL2"), []byte{0x00}, []byte{0xff})
+	table1 := NewStringTable([]byte("TBL1"))
+	table2 := NewStringTable([]byte("TBL2"))
 
 	txn := s.Update()
 	defer txn.Discard()
@@ -1176,6 +996,6 @@ func TestMultipleTableIsolation(t *testing.T) {
 
 func TestEmptyTableId_Panics(t *testing.T) {
 	require.Panics(t, func() {
-		_ = NewStringTable([]byte{}, []byte{0x00}, []byte{0xff})
+		_ = NewStringTable([]byte{})
 	})
 }
