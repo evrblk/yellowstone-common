@@ -8,6 +8,8 @@ This repository contains some reusable utils for Everblack services.
 * `cache` - cache with TTL, negative caching, and safe concurrent loading
 * `encoding/base62` - Base62 implementation
 * `honey` - tables for BadgerDB
+* `validatorstest` - test helpers for `ValidateXxxRequest` methods on top of proto messages
+* `codegen/genmarshal` - codegenerator for adapting VT_Proto messages to Monstera request/response interfaces
 * `metrics` - handy Prometheus metrics server wrapper and some helpers
 * `workers` - interval worker implementation
-* `utils` - missing functions from `samber/lo`,
+* `utils` - missing functions from `samber/lo`
