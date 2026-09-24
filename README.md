@@ -12,4 +12,5 @@ This repository contains some reusable utils for Everblack services.
 * `codegen/genmarshal` - codegenerator for adapting VT_Proto messages to Monstera request/response interfaces
 * `metrics` - handy Prometheus metrics server wrapper and some helpers
 * `workers` - interval worker implementation
+* `middleware` - authentication and monitoring gRPC middleware
 * `utils` - missing functions from `samber/lo`

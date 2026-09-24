@@ -2,8 +2,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
@@ -11,29 +9,27 @@ import (
 )
 
 type MetricsServer struct {
-	port int
-	e    *echo.Echo
+	listenAddr string
+	e          *echo.Echo
 }
 
-func NewMetricsServer(port int) *MetricsServer {
+func NewMetricsServer(listenAddr string) *MetricsServer {
 	e := echo.New()
 	e.HideBanner = true
 	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{EnableOpenMetrics: true})))
 
 	return &MetricsServer{
-		e:    e,
-		port: port,
+		e:          e,
+		listenAddr: listenAddr,
 	}
 }
 
 func (s *MetricsServer) Start() {
 	go func() {
-		s.e.Start(fmt.Sprintf(":%d", s.port))
+		s.e.Start(s.listenAddr) // TODO: log listener errors?
 	}()
 }
 
 func (s *MetricsServer) Stop() {
-	log.Printf("Stopping Metrics Server")
-
 	s.e.Shutdown(context.TODO())
 }
